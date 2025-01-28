@@ -1,0 +1,576 @@
+\documentclass[13pt]{beamer}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+\title[Workshop 3] %optional
+{Workshop 3}
+\subtitle{Correlation, dimension reduction, and clustering analysis using R}
+\author[Ziyi Li] % (optional)
+{Ziyi Li}
+
+\institute[MDA] % (optional)
+{
+  
+  Department of Biostatistics\\
+  MD Anderson Cancer Center
+}
+
+\date[GS01102 2023] % (optional)
+{Introduction to Bioinformatics (GS01102)}
+
+% Use a simple TikZ graphic to show where the logo is positioned
+%\logo{ \includegraphics[scale=0.1]{MDA.jpg} }
+\titlegraphic{\flushright \includegraphics[scale=0.1]{MDA.jpg}
+}
+\begin{document}
+\frame{\titlepage}
+%Highlighting text
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+Scatterplot is the basic plot to show correlation between two random variables. We consider simulated bivariate data under two scenarios of uncorrelated and correlated cases.
+<<fig.height=2.5, fig.width=12>>=
+set.seed(2707);x1 <- rnorm(500,0,1); y1 <- rnorm(500,0,1)
+y2 <- 2*x1 + y1 # y2 is linearly related with x1 and y1
+y2 <- y2-mean(y2) # center y2
+y2 <- y2 / sd(y2) # scale y2
+par(mfrow=c(1,4),mar=c(2.5,2.5,1,1))
+hist(x1); hist(y2);plot(x1, y1); plot(x1, y2)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+<<fig.height=2.5, fig.width=12>>=
+cor(x1,y1)
+cor(x1,y2)
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+When there are more than two variables, we can check pairwise correlations. We revisit the TCGA BRCA data.
+<<>>=
+expdat = read.table("resExp_filtered.txt",header=TRUE)
+dim(expdat)
+expdat[1:3,1:3]
+
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+<<>>=
+mat = expdat[,-1] # remove the first column for gene names
+is.data.frame(mat)
+mat = matrix(as.numeric(unlist(mat)),ncol=ncol(mat)) # transform data.frame to numeric matrix
+mat[1:3,1:3]
+genes = expdat[,1]
+head(genes)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+Using the $764\times 550$ data, we are interested in identifying correlation patterns of genes. Recall that genes were stored row-wise in the data. The cor() function takes a matrix to compute all pairwise correlations among columns of the matrix. So we transpose the expression data and then apply the cor() function.
+<<>>=
+cormat = cor(t(mat))
+dim(cormat)
+cormat[3,4] # Correlation between genes in the rows 3 and 4 of mat.
+all(cormat == t(cormat)) ### Symmetric
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Correlation}
+We have $764\times 764$ correlation matrix, which is symmetric and has unit diagonal values. Due to the large number of genes, it is hard to investigate the correlation pattern. Try heatmap!
+<<fig.height=5, fig.width=10>>=
+heatmap(cormat)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Distance Metrics}
+There are various metrics to define distance between two vectors x and y with the same length.
+<<>>=
+x = rnorm(100,mean=3)
+y = rnorm(100,mean=5)
+# Euclidian Distance
+euclidian_dist1 = sqrt(sum((x-y)^2))
+euclidian_dist2 = dist(rbind(x,y))
+euclidian_dist1
+euclidian_dist2
+@
+\end{frame}
+
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Distance Metrics}
+<<>>=
+# Manhattan Distance
+manhattan_dist1 = sum(abs(x-y))
+manhattan_dist2 = dist(rbind(x,y),method="manhattan")
+manhattan_dist1
+manhattan_dist2
+
+# 1-abs(cor) #
+1- abs(cor(x,y))
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Principal Component Analysis (PCA)}
+The purpose of principal component analysis is to find the best low-dimensional representation of the variance in a multivariate dataset. Before performing PCA, it would be better idea to first standardize all variables so that measurements for each variable have mean 0 and sd 1. Note that however, sometimes working with original data (before standardization) works better if the scales of variables are similar. We will investigate the crab data in the MASS library. \\
+
+We draw scatter plots for the five morphological measures by species and sex.
+<<>>=
+library(MASS)
+data(crabs)
+is.data.frame(crabs)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Principal Component Analysis (PCA)}
+<<>>=
+dim(crabs)
+head(crabs,2) # species - "B" or "O" for blue or orange.
+fac <- as.factor(paste(crabs[,1],crabs[,2],sep="_"))
+table(fac)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+<<fig.height=4, fig.width=7>>=
+plot(crabs[,4:8], pch=as.numeric(fac))
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+<<fig.height=4, fig.width=7>>=
+plot(crabs[,4:5], pch=as.numeric(fac))
+legend("topleft",legend=levels(fac),pch=1:4,bty="n")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+There are four distinct groups of crabs by species and sex, but it is difficult to classify crabs. The 5 measures are highly correlated:
+<<fig.height=4, fig.width=7>>=
+cor(crabs[,4:8])
+@
+The information in the crab data is redundant. We want to make more parsimonious data by PCA.
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+<<fig.height=4, fig.width=7>>=
+?princomp # always check the help file
+mat = crabs[,4:8] # try with scale(crabs[,4:8])
+boxplot(mat) # check distribution for each variable
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+<<fig.height=4, fig.width=7>>=
+apply(mat,2,mean) # check if mean is all zero
+apply(mat,2,sd) # check if sd is all 1
+fit = princomp(mat) # fit PCA to the the standardized
+summary(fit)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+When we fit PCA for $n\times p$ data, we obtain p principal components (transformed data), that are in the $n\times p$ score matrix object
+<<fig.height=4, fig.width=7>>=
+dim(fit$scores)
+head(fit$scores,3)
+cor(fit$scores) ## cor for the transformed data
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+Now, you can check that the p principle components are not correlated. For dimension reduction, we need to reduce the number of variables p to k such as $k<p$ by selecting the most informative principal components. 
+
+The principal component that have high variance is informative to explain the original data.
+<<fig.height=4, fig.width=7>>=
+sd.scores = apply(fit$scores,2,sd) # sd for principal components
+sum(sd.scores^2) # should be the same as the below
+sum(apply(mat,2,var))
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+The total variance of PCs should be the same as total variance of the orginal data. The total variances from original data and the transformed data should be the same. Now, we select the principal components by screeplot.
+<<fig.height=3, fig.width=10>>=
+screeplot(fit,type="lines")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+PC1 explains 98\% of the total variance. If we add PC2, PC1 and PC2 explain 99\%. 
+<<fig.height=4, fig.width=12>>=
+sd.scores[1]^2/sum(sd.scores^2) 
+# Proportion of variance explained by PC1
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Crabs data}
+It was expected when we looked at the pairwise correlations of the original data: all the correlations were so high, which means that all the five variables are very similar acting like one variable.
+<<fig.height=4, fig.width=12>>=
+par(mar=c(4.5,4.5,1,1))
+plot(fit$score[,1],fit$score[,2],pch=16,col=as.numeric(fac),
+xlab="PC1", ylab="PC2")
+legend("topright",legend=levels(fac),pch=16, col=1:4,bty="n")
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+We will go back to the TCGA Breast Cancer data. We first standardize the data.
+<<fig.height=4, fig.width=13>>=
+mat = expdat[,-1] # remove the first column for gene names
+mat = matrix(as.numeric(unlist(mat)),ncol=ncol(mat)) # transform data.frame to numeric matrix
+genes = expdat[,1]
+stdmat = t(scale(t(mat)))
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+For high-dimensional case, where the number of genes are larger than the sample size $(p>n)$, the princomp function in R does not work. Instead, we need use prcomp function that works regardless of the data dimension. Perform PCA.
+<<fig.height=4, fig.width=13>>=
+fit <- prcomp(t(stdmat))
+names(fit)
+dim(fit$x) # transformed data (scores)
+fit$x[1:2,1:2]
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+<<fig.height=4, fig.width=13>>=
+cor(fit$x)[1:5,1:3] # Uncorrelated
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+Now, using prcomp function, the x object includes n PCs. Note that when $p>n$, n number of PCs are fitted. Now choose number of PCs.
+<<fig.height=4, fig.width=13>>=
+vars = as.numeric(apply(fit$x,2,var)) # variances
+sum(vars) # should be the same as # of genes by using std. data.
+cumprops = cumsum(vars)/sum(vars) 
+# cumulative proportions of variances
+head(cumprops,3)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+<<fig.height=4, fig.width=13>>=
+par(mfrow=c(1,2),mar=c(4.5,4.5,1,1))
+plot(vars,type="b",pch=16,ylab="variances",xlab="PCs")
+plot(cumprops,type="b",pch=16,
+ylab="Cumulative proportions",xlab="PCs")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+We will need 90 PCs to explain around 80\% of the total variance. In this ordination method, the data points (i.e., the samples) can be projected onto the 2D plane by the top 2 PCs such that they spread out optimally. Let’s check sample distances on the PC1 and PC2 plane.
+<<fig.height=4, fig.width=13>>=
+par(mfrow=c(1,1),mar=c(4.5,4.5,1,1))
+plot(fit$x[,1],fit$x[,2],pch=16,xlab="PC1",
+ylab="PC2",xlim=c(-30,30),ylim=c(-30,30))
+@
+\end{frame}
+
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{PCA example}
+<<fig.height=4, fig.width=13>>=
+vars[1] / sum(vars) # % variance explained by PC1
+vars[2] / sum(vars) # % varinace explained by PC2
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+\begin{itemize}
+\item A useful first step in a multivariate (high-dimensional) data analysis is to assess overall similarity between samples, i.e. your experimental design. For example, which samples are similar to each other, which are different? Does this fit to the expectation from the experiment design? If you have control and treated groups of patients, the patients within group should be clustered together. 
+\item Using TCGA breast cancer example, we can check transcriptomic similarities by tumor receptor subtypes, ER/PR positive, HER2 positive and Triple negative.
+\item We load clinical data for the 550 patients. The columns of expdat and rows of the clinical data are matched.
+\end{itemize}
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+<<>>=
+cldat = read.table("TCGABRCA_cldat.txt",header=TRUE)
+dim(cldat)
+head(cldat[,1]) # patient id for clinical data
+head(colnames(expdat)[-1]) # patient id for gene expression data
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+The patient ids from the two datasets, colnames(expdat)[-1] and cldat[,1] should be matched. For example, A0D9 in expdat and TCGA-A7-A0D9 represent the same patient. Then we construct the subtype based on ER, PR and HER2 statuses:
+<<>>=
+ER = cldat[,"ER.Status"]
+PR = cldat[,"PR.Status"]
+HER2 = cldat[,"HER2.Final.Status"]
+Subtype = rep(NA,nrow(cldat))# Tumor Receptor subtype
+Subtype[ER=="Positive"|PR=="Positive"] = "ER/PR positive"
+Subtype[HER2=="Positive"] = "HER2 positive"
+Subtype[ER=="Negative"&PR=="Negative"&HER2=="Negative"] = 
+"Triple negative"
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+<<>>=
+table(Subtype,useNA="ifany")
+Subtype[is.na(Subtype)] = "Unknown"
+Subtype = as.factor(Subtype)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+Now, we have subtype information for the patients. We can label each points of the scatter plot for PC1 and PC2 by the subtype info.This plot looks more informative: Triple negative patients are genomically different from ER/PR positive patients.
+<<fig.height=4, fig.width=13>>=
+cols= c("green","blue","red","grey")
+par(mfrow=c(1,1),mar=c(4.5,4.5,1,1))
+plot(fit$x[,1],fit$x[,2],pch=16,
+col=cols[as.numeric(Subtype)],xlab="PC1",ylab="PC2")
+legend("bottomleft",legend=paste(levels(Subtype),"(","n=",
+table(Subtype),")",sep=""),pch=16,col=cols,bty="n",cex=0.9)
+@
+\end{frame}
+
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+Now, let's try performing the dimension reduction using t-SNE
+<<fig.height=4, fig.width=13, eval=FALSE>>=
+# install.packages("Rtsne")
+library(Rtsne)
+res = Rtsne(t(stdmat))
+cols= c("green","blue","red","grey")
+par(mfrow=c(1,1),mar=c(4.5,4.5,1,1))
+plot(res$Y[,1:2],pch=16,
+     col=cols[as.numeric(Subtype)],xlab="tSNE1",ylab="tSNE2")
+legend("bottomright",legend=paste(levels(Subtype),"(","n=",
+                    table(Subtype),")",sep=""),
+                    pch=16,col=cols,bty="n",cex=0.9)
+@
+\end{frame}
+
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{TCGA data example}
+Now, let's try performing the dimension reduction using UMAP
+<<fig.height=4, fig.width=13, eval=FALSE>>=
+# install.packages("umap")
+library(umap)
+res = umap(t(stdmat))
+cols= c("green","blue","red","grey")
+par(mfrow=c(1,1),mar=c(4.5,4.5,1,1))
+plot(res$layout[,1:2],pch=16,
+     col=cols[as.numeric(Subtype)],xlab="UMAP1",ylab="UMAP2")
+legend("bottomright",legend=paste(levels(Subtype),"(","n=",
+                    table(Subtype),")",sep=""),
+                    pch=16,col=cols,bty="n",cex=0.9)
+
+@
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{tSNE and UMAP figures in TCGA example}
+\centering
+    \includegraphics[width=\textwidth]{Dimension.png}
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+Try an animation for K-means.
+<<eval=FALSE>>=
+library(animation)
+dev.new()
+dat = cbind(X1 = rnorm(100),X2=rnorm(100))
+kmeans.ani(dat,centers=3,pch=1:3,col=1:3)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+You can interpret the animation: (1) Randomly choose three points; (2) compute Euclidian distance and draw the assigned clusters; (3) Compute the centroids, the mean of the clusters, and repeat until no data changes cluster.
+<<fig.height=4, fig.width=13>>=
+?iris
+dim(iris);head(iris,2)
+km <- kmeans(iris[,1:4], 3)
+plot(iris[,1], iris[,2], col=km$cluster)
+points(km$centers[,c(1,2)], col=1:3, pch=8, cex=2)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+<<fig.height=4, fig.width=13>>=
+table(km$cluster, iris$Species)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+One possible way to choose the $K$ (the number of clusters) is to use within-group heterogeneity. Consider to create the function that runs $K-$means with fixed $K$ and store the total within clusters sum of squares.
+<<fig.height=4, fig.width=13>>=
+kmean_withinss <- function(K,dat) {
+    cl <- kmeans(dat,K)
+    return(cl$tot.withinss)
+}
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+Then, you can fit K-means for $K=2,\cdots,10$ and draw the plot for the total within sum of squares.
+<<fig.height=4, fig.width=13>>=
+tot.withinss = sapply(2:10,
+function(k) kmean_withinss(K=k,dat=iris[,1:4]))
+plot(2:10,tot.withinss,type="b")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{K-means}
+If we select K=2, how does it look like?
+<<fig.height=4, fig.width=13>>=
+km <- kmeans(iris[,1:4], 2)
+plot(iris[,1:2], col=km$cluster)
+points(km$centers[,c(1,2)], col=1:2, pch=8, cex=2)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hierarchical clustering}
+<<fig.height=4, fig.width=13>>=
+s.iris = iris[sample(1:150,100),]
+distance <- dist(s.iris[,-5], method="euclidean")
+##vary euclidean distances
+cluster <- hclust(distance, method="average")
+plot(cluster, hang=-1, label=s.iris$Species,
+main="method=average",cex.axis=0.5)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hierarchical clustering}
+<<fig.height=4, fig.width=13>>=
+cluster <- hclust(distance, method="single")
+plot(cluster, hang=-1, label=s.iris$Species,
+main="method=single",
+cex.axis=0.5)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hierarchical clustering}
+<<fig.height=4, fig.width=13>>=
+cluster <- hclust(distance, method="complete")
+plot(cluster, hang=-1, label=s.iris$Species,
+main="method=complete",cex.axis=0.5)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hierarchical clustering}
+<<>>=
+mems = cutree(cluster,k=3)
+table(mems,s.iris$Species)
+@
+\end{frame}
+
+\end{document}

@@ -1,0 +1,398 @@
+\documentclass[13pt]{beamer}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+\title[Workshop 2] %optional
+{Workshop 2}
+\subtitle{Statistical analysis using R}
+\author[Ziyi Li] % (optional)
+{Ziyi Li}
+
+\institute[MDA] % (optional)
+{
+  
+  Department of Biostatistics\\
+  MD Anderson Cancer Center
+}
+
+\date[GS01102 2023] % (optional)
+{Introduction to Bioinformatics (GS01102)}
+
+% Use a simple TikZ graphic to show where the logo is positioned
+%\logo{ \includegraphics[scale=0.1]{MDA.jpg} }
+\titlegraphic{\flushright \includegraphics[scale=0.1]{MDA.jpg}
+}
+\begin{document}
+\frame{\titlepage}
+%Highlighting text
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hypothesis testing}
+A statistical hypothesis is an assumption made by the researcher about the population data collected for any experiment. Hypothesis testing is a formal way of statistically validating the hypothesis made by the researcher based on sample data.
+\begin{itemize}
+    \item Null hypothesis ($H_0$): Observations are due to a chance factor
+    \item Alternative hypothesis ($H_a$): Observations are the result of a real effect
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hypothesis testing}
+Hypothesis tests use p-values to weigh the strength of the evidence. The P-value is defined by the \textbf{probability of observing more extreme values under the null hypothesis toward the alternative hypothesis than the estimate that you observe based on data under the assumption that the null is true.} Thus, a smaller p-value indicates stronger evidence against the null.\\
+
+Every time we make a decision it is possible to be wrong, and there are two possible mistakes:
+
+\begin{itemize}
+    \item Type I error if we reject $H_0$ when in fact $H_0$ is true
+    \item Type II error if we fail to reject $H_0$ when in fact $H_a$ is true
+\end{itemize}
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hypothesis testing}
+The \textbf{type 1 error} is usually considered worse and we design our testing procedure to control the probability of making such a mistake. We define significance level:
+$$
+\Pr(\text{Type I error}) = \alpha
+$$
+Thus, if p-value$< \alpha$, we reject the null.
+
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{One sample t-test}
+One-sample t-test is a test for one population. Your hypotheses will be, one of $H_0: \mu = \mu_0$ vs $H_a: \mu \neq \mu_0$, $H_0: \mu \ge \mu_0$ vs $H_a: \mu < \mu_0$, or $H_0: \mu \le \mu_0$ vs. $H_a: \mu > \mu_0$ for a known $\mu_0$.
+<<eval=FALSE>>=
+x = rnorm(20,mean=2,sd=1) # consider normal random numbers as observed data
+t.test(x,alternative="two.sided",mu=2)
+t.test(x,alternative="two.sided",mu=1)
+t.test(x,alternative="greater",mu=1)
+t.test(x,alternative="less",mu=1)
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Two sample t-test}
+Two-sample t-test is a test for comparing parameters for two populations. Define $\mu_1$ and $\mu_2$ are mean parameters for the first and second populations. Your hypotheses will be one of $H_0: \mu_1 = \mu_2$ vs $H_a: \mu_1 \neq \mu_2$, $H_0: \mu_1 \ge \mu_2$ vs $H_a: \mu_1 < \mu_2$, or $H_0: \mu_1 \le \mu_2$ vs. $H_a: \mu_1 > \mu_2$.
+<<eval=FALSE>>=
+x1 = rnorm(20,mean=2,sd=1) # observed data for the first population
+x2 = rnorm(20,mean=3,sd=1) # observed data for the second
+t.test(x1,x2,alternative="two.sided")
+t.test(x1,x2,alternative="greater")
+t.test(x1,x2,alternative="less")
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Paired t-test}
+Paired t-test is a test for comparing parameters for paired samples. For example, you observe patients’ tumor
+volume before and after treatment, then we define the mean before treatment as $\mu_1$ and the mean after
+treatment as $\mu_2$.
+<<eval=FALSE>>=
+ui = rnorm(20,mean=0.5,sd=2) # for individual correlation
+x1 = rnorm(20,mean=2,sd=1)+ui # observed data before treatment
+x2 = rnorm(20,mean=3,sd=1)+ui # observed data after treatment
+t.test(x1,x2,alternative="two.sided",paired=T) 
+# The option "paired" should be true. Otherwise, it performs unpaired t test
+t.test(x1,x2,alternative="greater",paired=T)
+t.test(x1,x2,alternative="less",paired=T)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Multiple testing}
+For a single test, we control the type I error $\alpha$. However, if we perform tests many times, then your chance to make one or more errors in $m$ tests will be
+$$
+\Pr(\text{at least one error}) = 1 - (1-\alpha)^m.
+$$
+So then when $m$ is large, the chance will be nearly 100\%. Explore p.adjust function for p-value adjustment when you perform multiple testing.
+<<eval = FALSE>>=
+sim_p_value = runif(1000)
+p.adjust(sim_p_value, method = "bonferroni")
+p.adjust(sim_p_value, method = "fdr")
+# p.adjust.methods
+# c("holm", "hochberg", "hommel", "bonferroni", 
+#   "BH", "BY", "fdr", "none")
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Data Frames for multivariate data}
+\begin{itemize}
+\item We have had experience with vectors of data, which are long lists of numbers. Each entry in the vector is a single measurement on a subject or experimental unit in the study (univariable analysis). 
+\item However, statistical analyses are often conducted on data that involve two or more measurements for each subject. For example we observe gene expression for p number of genes for n subjects and these are represented by a $n \times p$ rectangular array (n rows for samples and p columns for genes). When the number of genes are higher than the sample size $p>>n$, we call the data is high-dimensional.
+\end{itemize}
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Data Frames for multivariate data}
+In R, data.frame type can store multiple variables that are qualitative and quantitative. For example, we can make a data frame with two variables: one includes characters and another includes numeric values.
+<<>>=
+Dat = data.frame(Var1 = letters[1:5],Var2=1:5)
+is.data.frame(Dat)
+names(Dat) # data.frame has names attribute
+Dat[,"Var1"]
+Dat[,"Var2"]
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+We use RNA-seq data from tumor tissues obtained from 550 female caucasian patients for 764 genes, corresponding to major pathways in cancer (PI3K/AKT, P53, cell cycle, apoptosis, mTOR, MAPK, RAS and ERBB). The expression of each gene within each sample is measured by the total read count (TReC), and we use log-transformed TReC, logTReC. Note that the data matrix we will use is obtained after removing effects of read depth, plate, institution, age, and SNP genotype effect.\\
+
+Download and quality check of the TCGA BRCA gene expression dataset.
+<<>>=
+expdat = read.table("resExp_filtered.txt", header = TRUE)
+expdat[1:5,1:5]
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+<<>>=
+mat = expdat[,-1] # remove the first column for gene names
+is.data.frame(mat)
+sum(is.na(mat)) # number of missing values
+mat = matrix(as.numeric(unlist(mat)),ncol=ncol(mat)) # transform data.frame to numeric matrix
+mat[1:5,1:5]
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+The expdat includes gene names in the first column and gene expressions are included from second to the last
+column. This is $p\times(n + 1)$ data frame with $p(=764)$ genes in rows and $n(=550)$ in columns. Note that this data frame includes gene names in the first column as character type and gene expression values for all other columns. For analyzing the gene expression data, we need to make a matrix that includes only numeric values after taking out the gene names in the first column. Then check the mean and sd values for each gene.
+
+<<>>=
+genes = expdat[,1]
+head(genes)
+head(rowMeans(mat))
+head(apply(mat,1,sd)) # row-wise standard deviations
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+After checking those summary statistics, we can see that the data are not scaled and not centered. Let’s scale the data and check if all values are following normal-like shape.
+<<>>=
+stdmat = t(scale(t(mat)))
+head(rowMeans(stdmat),2) # row-wise mean values
+head(apply(stdmat,1,sd),2) # row-wise standard deviations
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+Because we standardize the data, the distribution should be centered around zero and bell shaped. From q-q plot, the left and right tails are deviated from standard normal, which is a good sign of that the data has some signal from null hypothesis.
+<<fig.height=3, fig.width=7>>=
+par(mfrow=c(1,2),mar=c(4.5,4.5,1,1))
+hist(c(stdmat),prob=T,breaks=100,main="")
+curve(dnorm,add=T,col="red")
+qqnorm(c(stdmat)); qqline(c(stdmat))
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+Our aim is to identify genes that are differentially expressed between two breast cancer subtypes, ER/PR positive (ER/PR+) and Triple negative (TNBC). Now we load clinical data for the 550 TCGA breast cancer patients. The columns of expdat and rows of the clinical data are already matched.
+<<fig.height=4, fig.width=13>>=
+cldat = read.table("TCGABRCA_cldat.txt",header=TRUE)
+dim(cldat)
+head(cldat[,1],3) # patient id for clinical data
+head(colnames(expdat)[-1],3) # patient id for gene expression data
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+Note that the rows represent samples while the columns of gene expression data were samples. The patient ids from the two datasets, colnames(expdat)[-1] and cldat[,1] should be matched. For example, A0D9 in expdat and TCGA-A7-A0D9 represent the same patient. We first construct the subtype based on ER, PR and HER2 statuses in the clinical dataset:
+<<>>=
+ER = cldat[,"ER.Status"]
+PR = cldat[,"PR.Status"]
+HER2 = cldat[,"HER2.Final.Status"]
+Subtype = rep(NA,nrow(cldat))# Tumor Receptor subtype
+Subtype[ER=="Positive"|PR=="Positive"] = "ER/PR positive" 
+# ER positive or PR positive
+Subtype[HER2=="Positive"] = "HER2 positive"
+Subtype[ER=="Negative"&PR=="Negative"
+&HER2=="Negative"] = "Triple negative" 
+table(Subtype,useNA="ifany")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+<<>>=
+table(Subtype,useNA="ifany")
+Subtype[is.na(Subtype)] = "Unknown"
+Subtype = as.factor(Subtype)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+First, we need to select ER/PR positive and Triple negative groups.
+<<>>=
+w.ERPRp = which(Subtype=="ER/PR positive") # indices for ER/PR+
+w.TNBC = which(Subtype=="Triple negative") # indices for TNBC
+X = mat[,w.ERPRp] # exp. data for ER/PR+
+Y = mat[,w.TNBC] # exp. data for TNBC
+dim(X)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+We will perform two-sample t-tests for all the 764 genes and store only the p-values.
+<<>>=
+pvals = rep(NA,764) # initialize a vector for p-values
+for (i in 1:764) {
+    x = X[i,]
+    y = Y[i,]
+    fit= t.test(x,y) # By default, alternative="two.sided" and var.equal=F.
+    pvals[i]= fit$p.value
+}
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature selection}
+Now, we have p-values for all genes. We performed two sample t-tests that compare two means for ER/PR+ vs. TNBC groups. This is multiple testing for 764 genes. We need multiplicity adjustment. First let’s control FDR.
+<<>>=
+padj.fdr = p.adjust(pvals,method="fdr") # Benjamini & Hochberg (1995)
+sum(padj.fdr<0.1)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature selection}
+Among the 570 findings, the 10\% (57 genes) are expected to be false positives. Let’s consider to control FWER (more conservative than FDR). Bonferroni correction can be easily performed by using the significance level (e.g., 0.05) divided by the number of tests (m=764).
+<<>>=
+alpha = 0.05
+sum(pvals<alpha/764)
+# The same adjustment can be done from p.adjust function
+padj.fwer = p.adjust(pvals,method="bonferroni")
+sum(padj.fwer<alpha)
+@
+By controlling FWER, we found 322 genes as differentially expressed (DE) genes between the two groups.
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+After selecting features, visualization matters! Now, we can focus only on the DE genes. We select columns of the gene expression data corresponding to the DE genes. Don’t forget to standardize it to compare their gene expression patterns across genes.
+<<>>=
+DEmat = mat[padj.fwer<alpha,c(w.ERPRp,w.TNBC)]
+DEgenes = expdat[padj.fwer<alpha,1] # DE gene names
+DEstdmat = scale(t(DEmat)) # each rows are standardized
+dim(DEstdmat) # now rows are samples and columns are genes
+DEsubtype = Subtype[c(w.ERPRp,w.TNBC)]
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+There are many ways to effectively display the DE genes. A way is to show heatmap. The pheatmap function is useful when we label rows or columns of the heatmap. Install pheatmap library first.
+<<eval=FALSE>>=
+# install.packages("pheatmap") # do this if pheatmap library is not installed
+library(pheatmap)
+pheatmap(DEstdmat)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+\includegraphics[width=\textwidth]{fig1.png}
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+The rows are samples and columns are genes. By default, they cluster the columns and rows in terms of the similarity (we will investigate more on this in Lecture 3). By labeling the rows with groups, we can see the overall gene expression patterns between the groups and classify genes that are over-expressed in one of the groups. Let’s label the rows by the groups.
+<<eval=FALSE>>=
+patientids = colnames(expdat)[-1]
+patientids_group = patientids[c(w.ERPRp,w.TNBC)]
+annrow = data.frame(Subtype=DEsubtype)
+rownames(annrow) = rownames(DEstdmat) = patientids_group
+pheatmap(DEstdmat,annotation_row=annrow,show_rownames=F,show_colnames=F)
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+\includegraphics[width=\textwidth]{fig2.png}
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+Our gene expression data are based on log-transformed gene expression data. The t-statistic can be used as standardized fold-change data. The fold change is FC =[mean(logTReC(TNBC)) - mean(logTReC(ER/PR+))] and the standard FC is SFC=FC/se(FC). The SFC is the same the two-sample t-test statistic. We display SFC values of DE genes with waterfall plot after obtaining t-test statistic values. 
+<<>>=
+X = DEmat[,DEsubtype=="Triple negative"]
+Y = DEmat[,DEsubtype=="ER/PR positive"]
+d = length(DEgenes)
+tstat = rep(NA,d) # initialize a vector for p-values
+for (i in 1:d) {
+x = X[i,]
+y = Y[i,]
+fit= t.test(x,y) # By default, alternative="two.sided" and var.equal=F.
+tstat[i]= fit$statistic
+}
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+<<fig.height=4, fig.width=13>>=
+library(RColorBrewer)
+cols = rev(colorRampPalette(rev(brewer.pal(n = 7, 
+name ="RdYlBu")))(length(tstat)))
+barplot(sort(tstat,decreasing=T),las=2,
+col=cols,xlab="DE genes",ylab="log(fold Change)")
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Save DE}
+After analyzing data, we want to save the results in excel format. From the DE analysis, we will save DE
+gene names and their corresponding p-values (adjusted and unadjusted) and the SFC estimates.
+<<>>=
+sig.w =which(padj.fwer<alpha)
+resultmat = data.frame(id=DEgenes,p=pvals[sig.w]
+,padjFWER=padj.fwer[sig.w],SFC=tstat) # make data.frame
+resultmat = resultmat[order(pvals[sig.w]),]
+head(resultmat,2)
+#write.table(resultmat,file="DE_result.csv",sep=",",row.names=F,col.names=T)
+@
+\end{frame}
+\end{document}

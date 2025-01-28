@@ -1,10 +1,11 @@
 \documentclass[13pt]{beamer}
 \usepackage{tikz}
+\usepackage{graphicx}
 \usetheme{Madrid}
 \usecolortheme{beaver}
-\title[Workshop 1] %optional
-{Workshop 1}
-\subtitle{Introduction to R in statistical analysis}
+\title[Workshop 2] %optional
+{Workshop 2}
+\subtitle{Statistical analysis using R}
 \author[Ziyi Li] % (optional)
 {Ziyi Li}
 
@@ -29,490 +30,369 @@
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Basic R Operations and Concept}
-Arithmetic
-<<>>=
-2 + 3 # add
-7^8 # 7 to the 8th power
-4 * 5 / 6 # multiply and divide
-sqrt(2)
-@
-
-\end{frame}
-
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Basic R Operations and Concepts}
-We can change the number of digits displayed with options:
-<<>>=
-options(digits = 16)
-sqrt(2)
-log2(1:4)
-options(digits = 7) # back to default
-0/0; 0/100; 100/0
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Assignment, Object names, and Data types}
-<<>>=
-x <- 7*41/pi # don't see the calculated value
-y <- 7*41/pi # don't see the calculated value
-x # take a look!
-y
-x==y
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Assignment, Object names, and Data types}
-For assignment, both <- and = work. It is recommended that use <- for assignment of values to variables. =
-is used to set options in functions.
-<<>>=
-typeof(x);typeof(pi);typeof("HH")
-sqrt(-1) # isn't defined
-sqrt(as.complex(-1)) # is defined
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Vectors}
-<<>>=
-(x1 <- LETTERS)
-(x2 <- 1:10)
-(x3 <- rep(1,10))
-(x4 <- rep(x2,2))
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Indexing Vectors}
-<<>>=
-x <- LETTERS
-x[3:10]
-x[-(3:10)]
-x[x=="H"] <- "HH" # find "H" and replace "HH"
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Functions and Expressions}
-<<>>=
-x <- 1:10
-y <- c(x,rep(NA,2)) # add missing values, NAs
-mean(x)
-mean(y) # produce missing value
-mean(y,na.rm=T) # remove NAs, then mean
-min(x); min(y,na.rm=T)
-sd(x); sd(y,na.rm=T)
-summary(x)
-summary(y)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Getting Help}
-There are many ways to getting help when you are using R. The simplest way is type ?name to see the help
-file for the function.
-<<>>=
-?summary
-?rep
-@
-\end{frame}
-
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Displaying Continuous Data}
-Download the average amount of rainfall data in inches for each of 70 United States (and Puerto Rico) cities
-from R.
-<<>>=
-data(precip)
-?precip
-summary(precip)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Displaying Continuous Data}
-For continuous data, histogram is a standard way for displaying the empirical distribution. The histograms
-using hist function can be displayed in two ways: (1) frequency (by default) and (2) density/relative frequency
-(by setting freq=F). Check how much the histograms look different by the bin size.
-<<fig.height=2.2, fig.width=13>>=
-par(mar = c(2.1, 3.5, 1, 0.3), mgp = c(1.2, 0.5, 0),
-mfrow=c(1,2)) # to display two histograms side-by-side
-hist(precip,main="");hist(precip,breaks=100,main="") # use main="" to suppress the title
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Displaying Continuous Data}
-<<fig.height=3.5, fig.width=13>>=
-par(mar = c(2.1, 3.5, 1, 0.3), mgp = c(1.2, 0.5, 0),
-mfrow=c(1,2))
-hist(precip,main="",freq=F);hist(precip,breaks=100,main="",
-freq=F)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Displaying Discrete Data}
-One of the best way to summarize qualitative/discrete data is with a table of the data values. We use data
-sets related to the 50 states of the United States of America. We can display table with frequencies or
-proportions.
-<<fig.height=3.5, fig.width=13>>=
-ta <- table(state.region)
-ta
-ta/sum(ta) # proportions/relative frequencies
-prop.table(ta) # same thing
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Displaying Discrete Data}
-A bar graph is the analogue of a histogram for categorical data.
-<<fig.height=3.5, fig.width=13>>=
-par(mfrow=c(1,2),mar=c(5,4.5,1,1)) 
-# to display two plots side-by-side and control margins
-barplot(table(state.region), cex.names = 0.8,las=2) 
-# check options!
-barplot(prop.table(table(state.region)), cex.names =0.8,las=2) 
-# check options!
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Other Data Types in R}
-A logical value is either TRUE or FALSE (note that equivalently you can use TRUE=T=1, FALSE=F=0). Here is
-the example of a logical vector:
-<<fig.height=3.5, fig.width=13>>=
-x <- 1:10
-y1 <- x<5
-y1
-!y1 # you can swap
-y2 <- x!=10
-y2
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Other Data Types in R}
-When you perform statistical analyses, missing values denoted by NA in R should be handled carefully.
-<<fig.height=3.5, fig.width=13>>=
-x <- c(3, 7, NA, 4, 7)
-y <- c(5, NA, 1, 2, 2)
-is.na(x)
-is.na(y)
-which(is.na(x)) # indices for missing values
-which(is.na(y))
-x + y
-sum(x)
-sum(x,na.rm=T)
-sum(x[!is.na(x)])
-is.na(x)
-sum(is.na(x)) # counts how many missing values in x
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Normal Distribution}
-A continuous random variable, $X$ takes values an inteval of real numbers. The random variable X that
-follows Normal distribution with mean $\mu$ and variance $\sigma^2$, $N(\mu, \sigma^2)$ has the density function:
-$$
-f_{X}(x) = \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{(x-\mu)^2}{2\sigma^2}}.
-$$
-Let’s draw the normal density with $\mu$ and $\sigma$ (called standard normal) using dnorm function with options mean for $\mu$ and sd for $\sigma$.
-<<fig.height=3.5, fig.width=13>>=
-x = seq(-20,40,length=100)
-y = dnorm(x,mean=10,sd=2) # compute density for each x
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Normal Distribution}
-<<fig.height=4, fig.width=9>>=
-x = seq(-20,40,length=100)
-y = dnorm(x,mean=10,sd=2) # compute density for each x
-plot(x,y,type="l",ylim=c(0,0.5),lwd=2)
-x = seq(-20,40,length=100)
-y = dnorm(x,mean=0,sd=1) # standard normal
-lines(x,y,lwd=2,col=2)
-legend("topright",legend=c("mean=0, sd=1","mean=10, sd=2"),col=2:1,lwd=2,bty="n")
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Normal Distribution}
-The (cumulative) distribution function is defined as the probability that $X$ will take a value less than or
-equal to $q$, $P(X \le q) = p$. In other words, the left tail area up to $q$ under the density curve.
-
-<<fig.height=4, fig.width=9>>=
-pnorm(q=-1.96,mean=0,sd=1) # 2.5% left tail prob.
-1-pnorm(q=1.96,mean=0,sd=1) # 2.5% right tail prob.
-pnorm(q=0,mean=0,sd=1)
-pnorm(q=0,mean=0,sd=2)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Normal Distribution}
-The quantile function is defined as the value ($q$) of $X$ such that the probability of the variable being less than that value ($q$) equals the given probability ($p$).
-
-<<fig.height=4, fig.width=9>>=
-qnorm(p=0.025,mean=0,sd=1) # 2.5% left tail quantile
-qnorm(p=1-0.025,mean=0,sd=1) # 2.5% right tail quantile
-pnorm(q=qnorm(p=0.025,mean=0,sd=1),mean=0,sd=1)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Normal Distribution}
-We can generate random numbers from normal distributions using rnorm function.
-
-<<fig.height=4, fig.width=9>>=
-x = rnorm(n=10000) 
-# 10000 values are generated from standard normal
-hist(x,freq=F,col="green") 
-# Histogram with relative frequencies
-curve(dnorm,add=T,col="orange",lwd=2) 
-# add standard normal density curve to the Histgram.
-@
-\end{frame}
-
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Standard Normal distribution and Z-score}
-Let $X$ follows $N(\mu, \sigma^2)$. If $\mu = 0$ and $\sigma = 1$, then the distribution is called standard normal distribution.
-Random variables that follows any normal distributions can be transformed into random variable that follows
-standard normal distribution. Let’s assume that $Z$ follows standard normal distribution, $N(\mu = 0, \sigma^2 = 1)$.
-We can transform $X$ into $Z$ as follows:
-$$
-Z = X - \mu.
-$$
-Using the formula, we can transform normally distributed values to those that follows standard normal if we
-know the $\mu$ and $\sigma$. Equivalently, we can say
-$X = \mu + Z\sigma$.
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Standard Normal distribution and Z-score}
-<<fig.height=4, fig.width=9>>=
-x <- rnorm(1000,mean=10,sd=2) 
-# random numbers with mean 10 and sd 2.
-z <- (x - 10)/2 # Z-scores
-hist(z,freq=F,col="green") 
-# Histogram with relative frequencies
-curve(dnorm,add=T,col="orange",lwd=2) 
-# add standard normal density curve to the Histgram.
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Standard Normal distribution and Z-score}
-Thanks to this property, we can use standard normal distribution to find distribution/quantiles for any normal distributions.
-<<fig.height=4, fig.width=9>>=
-pnorm(q=-0.96,mean=1,sd=5)
-pnorm(q = (-0.96-1)/5,mean=0,sd=1)
-z = qnorm(p=0.025,mean=0,sd=1)
-z*5 +2 # This is the 2.5% quantile for N(2,5^2)
-qnorm(p=0.025,mean=2,sd=5)
-@
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Q-Q plot}
+\frametitle{Hypothesis testing}
+A statistical hypothesis is an assumption made by the researcher about the population data collected for any experiment. Hypothesis testing is a formal way of statistically validating the hypothesis made by the researcher based on sample data.
 \begin{itemize}
-\item Q-Q (Quantile-Quantile) plot is designed to compare two probability distributions by plotting their quantiles
-against each other. 
-\item Many statistical models are developed under normality assumption and this is useful for
-checking the assumption. Q-Q plot for normality check is called normal Q-Q plot: it is simply a scatterplot
-for quantiles from data versus normal distribution (theoretical). 
-\item Note that the dots in the scatterplot should
-be follow the diagonal line if the empirical distribution is normal of any mean and standard deviation.
+    \item Null hypothesis ($H_0$): Observations are due to a chance factor
+    \item Alternative hypothesis ($H_a$): Observations are the result of a real effect
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hypothesis testing}
+Hypothesis tests use p-values to weigh the strength of the evidence. The P-value is defined by the \textbf{probability of observing more extreme values under the null hypothesis toward the alternative hypothesis than the estimate that you observe based on data under the assumption that the null is true.} Thus, a smaller p-value indicates stronger evidence against the null.\\
+
+Every time we make a decision it is possible to be wrong, and there are two possible mistakes:
+
+\begin{itemize}
+    \item Type I error if we reject $H_0$ when in fact $H_0$ is true
+    \item Type II error if we fail to reject $H_0$ when in fact $H_a$ is true
+\end{itemize}
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Hypothesis testing}
+The \textbf{type 1 error} is usually considered worse and we design our testing procedure to control the probability of making such a mistake. We define significance level:
+$$
+\Pr(\text{Type I error}) = \alpha
+$$
+Thus, if p-value$< \alpha$, we reject the null.
+
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{One sample t-test}
+One-sample t-test is a test for one population. Your hypotheses will be, one of $H_0: \mu = \mu_0$ vs $H_a: \mu \neq \mu_0$, $H_0: \mu \ge \mu_0$ vs $H_a: \mu < \mu_0$, or $H_0: \mu \le \mu_0$ vs. $H_a: \mu > \mu_0$ for a known $\mu_0$.
+<<eval=FALSE>>=
+x = rnorm(20,mean=2,sd=1) # consider normal random numbers as observed data
+t.test(x,alternative="two.sided",mu=2)
+t.test(x,alternative="two.sided",mu=1)
+t.test(x,alternative="greater",mu=1)
+t.test(x,alternative="less",mu=1)
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Two sample t-test}
+Two-sample t-test is a test for comparing parameters for two populations. Define $\mu_1$ and $\mu_2$ are mean parameters for the first and second populations. Your hypotheses will be one of $H_0: \mu_1 = \mu_2$ vs $H_a: \mu_1 \neq \mu_2$, $H_0: \mu_1 \ge \mu_2$ vs $H_a: \mu_1 < \mu_2$, or $H_0: \mu_1 \le \mu_2$ vs. $H_a: \mu_1 > \mu_2$.
+<<eval=FALSE>>=
+x1 = rnorm(20,mean=2,sd=1) # observed data for the first population
+x2 = rnorm(20,mean=3,sd=1) # observed data for the second
+t.test(x1,x2,alternative="two.sided")
+t.test(x1,x2,alternative="greater")
+t.test(x1,x2,alternative="less")
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Paired t-test}
+Paired t-test is a test for comparing parameters for paired samples. For example, you observe patients’ tumor
+volume before and after treatment, then we define the mean before treatment as $\mu_1$ and the mean after
+treatment as $\mu_2$.
+<<eval=FALSE>>=
+ui = rnorm(20,mean=0.5,sd=2) # for individual correlation
+x1 = rnorm(20,mean=2,sd=1)+ui # observed data before treatment
+x2 = rnorm(20,mean=3,sd=1)+ui # observed data after treatment
+t.test(x1,x2,alternative="two.sided",paired=T) 
+# The option "paired" should be true. Otherwise, it performs unpaired t test
+t.test(x1,x2,alternative="greater",paired=T)
+t.test(x1,x2,alternative="less",paired=T)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Multiple testing}
+For a single test, we control the type I error $\alpha$. However, if we perform tests many times, then your chance to make one or more errors in $m$ tests will be
+$$
+\Pr(\text{at least one error}) = 1 - (1-\alpha)^m.
+$$
+So then when $m$ is large, the chance will be nearly 100\%. Explore p.adjust function for p-value adjustment when you perform multiple testing.
+<<eval = FALSE>>=
+sim_p_value = runif(1000)
+p.adjust(sim_p_value, method = "bonferroni")
+p.adjust(sim_p_value, method = "fdr")
+# p.adjust.methods
+# c("holm", "hochberg", "hommel", "bonferroni", 
+#   "BH", "BY", "fdr", "none")
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Data Frames for multivariate data}
+\begin{itemize}
+\item We have had experience with vectors of data, which are long lists of numbers. Each entry in the vector is a single measurement on a subject or experimental unit in the study (univariable analysis). 
+\item However, statistical analyses are often conducted on data that involve two or more measurements for each subject. For example we observe gene expression for p number of genes for n subjects and these are represented by a $n \times p$ rectangular array (n rows for samples and p columns for genes). When the number of genes are higher than the sample size $p>>n$, we call the data is high-dimensional.
 \end{itemize}
 \end{frame}
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Q-Q plot}
-<<fig.height=4, fig.width=8>>=
-z <- rnorm(100) # normal random numbers
-qqnorm(z)
-qqline(z,col="red")
+\frametitle{Data Frames for multivariate data}
+In R, data.frame type can store multiple variables that are qualitative and quantitative. For example, we can make a data frame with two variables: one includes characters and another includes numeric values.
+<<>>=
+Dat = data.frame(Var1 = letters[1:5],Var2=1:5)
+is.data.frame(Dat)
+names(Dat) # data.frame has names attribute
+Dat[,"Var1"]
+Dat[,"Var2"]
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+We use RNA-seq data from tumor tissues obtained from 550 female caucasian patients for 764 genes, corresponding to major pathways in cancer (PI3K/AKT, P53, cell cycle, apoptosis, mTOR, MAPK, RAS and ERBB). The expression of each gene within each sample is measured by the total read count (TReC), and we use log-transformed TReC, logTReC. Note that the data matrix we will use is obtained after removing effects of read depth, plate, institution, age, and SNP genotype effect.\\
+
+Download and quality check of the TCGA BRCA gene expression dataset.
+<<>>=
+expdat = read.table("resExp_filtered.txt", header = TRUE)
+expdat[1:5,1:5]
 @
 \end{frame}
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Q-Q plot}
-Let’s check real data. You see deviations at the tail from normal distribution.
-<<fig.height=4, fig.width=13>>=
+\frametitle{Example: TCGA Breast Cancer Data}
+<<>>=
+mat = expdat[,-1] # remove the first column for gene names
+is.data.frame(mat)
+sum(is.na(mat)) # number of missing values
+mat = matrix(as.numeric(unlist(mat)),ncol=ncol(mat)) # transform data.frame to numeric matrix
+mat[1:5,1:5]
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+The expdat includes gene names in the first column and gene expressions are included from second to the last
+column. This is $p\times(n + 1)$ data frame with $p(=764)$ genes in rows and $n(=550)$ in columns. Note that this data frame includes gene names in the first column as character type and gene expression values for all other columns. For analyzing the gene expression data, we need to make a matrix that includes only numeric values after taking out the gene names in the first column. Then check the mean and sd values for each gene.
+
+<<>>=
+genes = expdat[,1]
+head(genes)
+head(rowMeans(mat))
+head(apply(mat,1,sd)) # row-wise standard deviations
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+After checking those summary statistics, we can see that the data are not scaled and not centered. Let’s scale the data and check if all values are following normal-like shape.
+<<>>=
+stdmat = t(scale(t(mat)))
+head(rowMeans(stdmat),2) # row-wise mean values
+head(apply(stdmat,1,sd),2) # row-wise standard deviations
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Example: TCGA Breast Cancer Data}
+Because we standardize the data, the distribution should be centered around zero and bell shaped. From q-q plot, the left and right tails are deviated from standard normal, which is a good sign of that the data has some signal from null hypothesis.
+<<fig.height=3, fig.width=7>>=
 par(mfrow=c(1,2),mar=c(4.5,4.5,1,1))
-z = (precip - mean(precip)) /sd(precip) 
-# compute z-scores for precip data
-hist(z,freq=F)
-curve(dnorm,add=T,col="orange",lwd=2) 
-qqnorm(precip);qqline(precip,col="red")
+hist(c(stdmat),prob=T,breaks=100,main="")
+curve(dnorm,add=T,col="red")
+qqnorm(c(stdmat)); qqline(c(stdmat))
 @
 \end{frame}
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Sampling Distributions}
-\begin{itemize}
-\item The probability distribution with the population is called the population distribution, and the probability
-distribution associated with statistic for samples from the population is called its sampling distribution. 
-\item Our goal is to learn about population from statistic and its sampling distribution; this is statistical inference!
-\end{itemize}
+\frametitle{Feature Selection}
+Our aim is to identify genes that are differentially expressed between two breast cancer subtypes, ER/PR positive (ER/PR+) and Triple negative (TNBC). Now we load clinical data for the 550 TCGA breast cancer patients. The columns of expdat and rows of the clinical data are already matched.
+<<fig.height=4, fig.width=13>>=
+cldat = read.table("TCGABRCA_cldat.txt",header=TRUE)
+dim(cldat)
+head(cldat[,1],3) # patient id for clinical data
+head(colnames(expdat)[-1],3) # patient id for gene expression data
+@
 \end{frame}
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Distribution of Sample Means}
-In our previous examples, we drew random samples from a normal distribution with mean $\mu$ and standard
-deviation (sd) $\sigma$. This is ``drawing a sample of size 500 from normal distribution with mean 10 and sd 2''
-if you use R command ``rnorm(n=500,mean=10, sd=2)”. The sample mean, $\frac{1}{n}\sum_{i=1}^{n}X_i$, for $n$ independent
-random samples $X_1, \cdots X_n$ from $N(\mu, \sigma^2)$ is a point estimator for the population mean $\mu$.
+\frametitle{Feature Selection}
+Note that the rows represent samples while the columns of gene expression data were samples. The patient ids from the two datasets, colnames(expdat)[-1] and cldat[,1] should be matched. For example, A0D9 in expdat and TCGA-A7-A0D9 represent the same patient. We first construct the subtype based on ER, PR and HER2 statuses in the clinical dataset:
 <<>>=
-x1 = rnorm(n=500,mean=10,sd=2) # Trial 1
-mean(x1) # The sample mean
-x2 = rnorm(n=500,mean=10,sd=2) # Trial 2
-mean(x2) # The sample mean
+ER = cldat[,"ER.Status"]
+PR = cldat[,"PR.Status"]
+HER2 = cldat[,"HER2.Final.Status"]
+Subtype = rep(NA,nrow(cldat))# Tumor Receptor subtype
+Subtype[ER=="Positive"|PR=="Positive"] = "ER/PR positive" 
+# ER positive or PR positive
+Subtype[HER2=="Positive"] = "HER2 positive"
+Subtype[ER=="Negative"&PR=="Negative"
+&HER2=="Negative"] = "Triple negative" 
+table(Subtype,useNA="ifany")
 @
 \end{frame}
 
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Distribution of Sample Means}
-Whenever sampling from the same normal distribution, we have different means. The next question to ask is “what happens if we do this repeatedly”. Let’s repeat!
+\frametitle{Feature Selection}
 <<>>=
-mu = 10 # set the population mean
-sigma = 2 # set the population sd
-n = 30 # each time we draw a sample of size 30
-xbar = rep(0,500) # Initialize the vector of sample means. We will repeat 500 times.
-for (i in 1:500) {
-    xbar[i] <- mean(rnorm(n=n,mean=mu,sd=sigma))
+table(Subtype,useNA="ifany")
+Subtype[is.na(Subtype)] = "Unknown"
+Subtype = as.factor(Subtype)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+First, we need to select ER/PR positive and Triple negative groups.
+<<>>=
+w.ERPRp = which(Subtype=="ER/PR positive") # indices for ER/PR+
+w.TNBC = which(Subtype=="Triple negative") # indices for TNBC
+X = mat[,w.ERPRp] # exp. data for ER/PR+
+Y = mat[,w.TNBC] # exp. data for TNBC
+dim(X)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature Selection}
+We will perform two-sample t-tests for all the 764 genes and store only the p-values.
+<<>>=
+pvals = rep(NA,764) # initialize a vector for p-values
+for (i in 1:764) {
+    x = X[i,]
+    y = Y[i,]
+    fit= t.test(x,y) # By default, alternative="two.sided" and var.equal=F.
+    pvals[i]= fit$p.value
+}
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature selection}
+Now, we have p-values for all genes. We performed two sample t-tests that compare two means for ER/PR+ vs. TNBC groups. This is multiple testing for 764 genes. We need multiplicity adjustment. First let’s control FDR.
+<<>>=
+padj.fdr = p.adjust(pvals,method="fdr") # Benjamini & Hochberg (1995)
+sum(padj.fdr<0.1)
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{Feature selection}
+Among the 570 findings, the 10\% (57 genes) are expected to be false positives. Let’s consider to control FWER (more conservative than FDR). Bonferroni correction can be easily performed by using the significance level (e.g., 0.05) divided by the number of tests (m=764).
+<<>>=
+alpha = 0.05
+sum(pvals<alpha/764)
+# The same adjustment can be done from p.adjust function
+padj.fwer = p.adjust(pvals,method="bonferroni")
+sum(padj.fwer<alpha)
+@
+By controlling FWER, we found 322 genes as differentially expressed (DE) genes between the two groups.
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+After selecting features, visualization matters! Now, we can focus only on the DE genes. We select columns of the gene expression data corresponding to the DE genes. Don’t forget to standardize it to compare their gene expression patterns across genes.
+<<>>=
+DEmat = mat[padj.fwer<alpha,c(w.ERPRp,w.TNBC)]
+DEgenes = expdat[padj.fwer<alpha,1] # DE gene names
+DEstdmat = scale(t(DEmat)) # each rows are standardized
+dim(DEstdmat) # now rows are samples and columns are genes
+DEsubtype = Subtype[c(w.ERPRp,w.TNBC)]
+@
+\end{frame}
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+There are many ways to effectively display the DE genes. A way is to show heatmap. The pheatmap function is useful when we label rows or columns of the heatmap. Install pheatmap library first.
+<<eval=FALSE>>=
+# install.packages("pheatmap") # do this if pheatmap library is not installed
+library(pheatmap)
+pheatmap(DEstdmat)
+@
+\end{frame}
+
+
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+\includegraphics[width=\textwidth]{fig1.png}
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+The rows are samples and columns are genes. By default, they cluster the columns and rows in terms of the similarity (we will investigate more on this in Lecture 3). By labeling the rows with groups, we can see the overall gene expression patterns between the groups and classify genes that are over-expressed in one of the groups. Let’s label the rows by the groups.
+<<eval=FALSE>>=
+patientids = colnames(expdat)[-1]
+patientids_group = patientids[c(w.ERPRp,w.TNBC)]
+annrow = data.frame(Subtype=DEsubtype)
+rownames(annrow) = rownames(DEstdmat) = patientids_group
+pheatmap(DEstdmat,annotation_row=annrow,show_rownames=F,show_colnames=F)
+@
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+\includegraphics[width=\textwidth]{fig2.png}
+\end{frame}
+%----------------------------------%
+\begin{frame}[fragile]
+\frametitle{DE analysis}
+Our gene expression data are based on log-transformed gene expression data. The t-statistic can be used as standardized fold-change data. The fold change is FC =[mean(logTReC(TNBC)) - mean(logTReC(ER/PR+))] and the standard FC is SFC=FC/se(FC). The SFC is the same the two-sample t-test statistic. We display SFC values of DE genes with waterfall plot after obtaining t-test statistic values. 
+<<>>=
+X = DEmat[,DEsubtype=="Triple negative"]
+Y = DEmat[,DEsubtype=="ER/PR positive"]
+d = length(DEgenes)
+tstat = rep(NA,d) # initialize a vector for p-values
+for (i in 1:d) {
+x = X[i,]
+y = Y[i,]
+fit= t.test(x,y) # By default, alternative="two.sided" and var.equal=F.
+tstat[i]= fit$statistic
 }
 @
 \end{frame}
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Distribution of Sample Means}
+\frametitle{DE analysis}
 <<fig.height=4, fig.width=13>>=
-mu = 10 # set the population mean
-sigma = 2 # set the population sd
-n = 30 # each time we draw a sample of size 30
-xbar = rep(0,500) # Initialize the vector of sample means. We will repeat 500 times.
-for (i in 1:500) {xbar[i] <- mean(rnorm(n=n,mean=mu,sd=sigma))}
-hist(xbar,freq=T)
+library(RColorBrewer)
+cols = rev(colorRampPalette(rev(brewer.pal(n = 7, 
+name ="RdYlBu")))(length(tstat)))
+barplot(sort(tstat,decreasing=T),las=2,
+col=cols,xlab="DE genes",ylab="log(fold Change)")
 @
 \end{frame}
 
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Distribution of Sample Means}
-\begin{itemize}
-\item Check if the Histogram looks like a normal distribution. Play with code by increasing the samples size n. You will see the sample means are getting close to the population mean $\mu$ as n increases. Why? check the sample standard deviations.
-\item In reality, the distribution of female adult heights are normal? We do not know. The central limit theorem (CLT) provides the most important theoretical basis for statistical inference. In formal way, the CLT is as follows:
-\item Let $X_1, \cdots, X_n$ be a random sample of size n from a population distribution with mean $\mu$ and finite standard deviation $\sigma$. Then the sampling distribution of $\bar{X} = \frac{1}{n}\sum_{i = 1}^{n} X_i$ approaches to normal distribution with mean $\mu$ and standard deviation $\sigma/\sqrt{n}$ as $n \rightarrow \infty$.
-\end{itemize}
-\end{frame}
-
 
 %----------------------------------%
 \begin{frame}[fragile]
-\frametitle{Distribution of Sample Means}
-Notice that the shape of the underlying population distribution is not mentioned in CLT. The result is true
-for any population that is well-behaved enough to have a finite standard deviations. So now we can go back
-to Z-scores. We can construct Z-score based on the CLT:
-$$
-Z = \frac{\bar{X} - \mu}{\sigma/\sqrt{n}}
-$$
-that approximately follows standard normal distribution, $N(0, 1)$. This is called Z-statistic.
-\end{frame}
-
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Confidence Interval}
-\begin{itemize}
-\item Confidence level refers to the percentage of all possible samples that can be expected to include true population parameter. Suppose we sample all possible samples from the same populations and compute confidence intervals for each sample. A $95\%$ confidence level implies that $95\%$ of the confidence intervals would include the true population parameter. $5\%$ won’t contain the parameter.
-\item Now we want to know how good is our mean estimator. We know that the Z statistic follows standard normal distribution and want to have a big confidence level, say $95\% = 100(1-\alpha)\%$. We find the lower and upper quantiles that has left and right tail proabilities of $0.025 (=\alpha/2)$, in other words,
-$$
-\Pr\left(-z_{\alpha/2} < \frac{\bar{X}-\mu}{\sigma/\sqrt{n}} < z_{\alpha/2}\right) = 1-\alpha.
-$$
-\end{itemize}
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Confidence Interval}
-After some algebra, this is equivalent to
-$$
-\Pr\left(\bar{X} - z_{\alpha/2}\sigma/\sqrt{n} < \mu < \bar{X} + z_{\alpha/2}\sigma/\sqrt{n}\right) = 1 - \alpha.
-$$
-Because normal distribution is symmetric around the mean, $\Pr(Z > z_{\alpha/2}) = \Pr(Z < -z_{\alpha/2})$. Let’s see the
-plant growth example.
+\frametitle{Save DE}
+After analyzing data, we want to save the results in excel format. From the DE analysis, we will save DE
+gene names and their corresponding p-values (adjusted and unadjusted) and the SFC estimates.
 <<>>=
-dim(PlantGrowth) # n=30
-n = nrow(PlantGrowth)
-xbar = mean(PlantGrowth[,"weight"]) # sample mean
-sigma = sd(PlantGrowth[,"weight"]) # sample standard deviation
-z = qnorm(1-0.025)
-lower = xbar - z * sigma/sqrt(n); upper = xbar + z * sigma/sqrt(n)
-paste0("(", lower, ",", upper, ")")
+sig.w =which(padj.fwer<alpha)
+resultmat = data.frame(id=DEgenes,p=pvals[sig.w]
+,padjFWER=padj.fwer[sig.w],SFC=tstat) # make data.frame
+resultmat = resultmat[order(pvals[sig.w]),]
+head(resultmat,2)
+#write.table(resultmat,file="DE_result.csv",sep=",",row.names=F,col.names=T)
 @
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Confidence Interval}
-\begin{itemize}
-\item The 95\% CI for the population mean $\mu$ is $[4.82,5.32]$. We are 95\% confident that the interval covers $\mu$. 
-\item As you see from this example, you used the sample standard deviation for $\sigma$ because we do not know $\sigma$, under the assumption that the sample sd is a good point estimate of $\sigma$. 
-\item However, for small samples (say, $n < 30$), sample sd is not a good estimator. In that case, $t-$distribution with a degree of freedom $n-1$ is used for inference. The $100(1-\alpha)\%$ CI is re-written as
-$$
-\bar{X} \pm t_{\alpha/2}(df = n-1)\frac{S}{\sqrt{n}},
-$$
-where $S$ is the sample standard deviation. 
-\end{itemize}
-\end{frame}
-
-%----------------------------------%
-\begin{frame}[fragile]
-\frametitle{Confidence Interval}
-Let's compute the $95\%$ CI for the plant growth data. 
-<<>>=
-t = qt(p=1-0.025,df=n-1)
-lower = xbar - t * sigma/sqrt(n)
-upper = xbar + t * sigma/sqrt(n)
-lower
-upper
-@
-Now we have slightly wider $95\%$ CI, $[4.81,5.33]$, which reflects the uncertainty esimating $\sigma$.
 \end{frame}
 \end{document}
